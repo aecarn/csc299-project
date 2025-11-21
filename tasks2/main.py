@@ -30,7 +30,8 @@ def cmd_add(args):
     new_task = {
         "id": next_id(tasks),
         "title": args.title,
-        "description": args.description or ""
+        "description": args.description or "",
+        "done": False
     }
     tasks.append(new_task)
     save_tasks(tasks)
@@ -42,7 +43,9 @@ def cmd_list(_args):
         print("No tasks yet.")
         return
     for t in tasks:
-        print(f'[{t["id"]}] {t["title"]} - {t.get("description","")}')
+        status = "✓" if t.get("done") else " "
+        print(f'[{t["id"]}] [{status}] {t["title"]} - {t.get("description","")}')
+
 
 def cmd_search(args):
     tasks = load_tasks()
@@ -56,6 +59,17 @@ def cmd_search(args):
         return
     for t in hits:
         print(f'[{t["id"]}] {t["title"]} - {t.get("description","")}')
+
+def cmd_done(args):
+    tasks = load_tasks()
+    tid = args.id
+    for t in tasks:
+        if t["id"] == tid:
+            t["done"] = True
+            save_tasks(tasks)
+            print(f"Marked task #{tid} as done.")
+            return
+    print(f"No task with id {tid}.")
 
 # 5) Command-line parser (defines add/list/search)
 def build_parser():
@@ -73,6 +87,10 @@ def build_parser():
     ps = sub.add_parser("search", help="Search tasks")
     ps.add_argument("query")
     ps.set_defaults(func=cmd_search)
+
+    pd = sub.add_parser("done", help="Mark a task as completed")
+    pd.add_argument("id", type=int)
+    pd.set_defaults(func=cmd_done)
 
     return p
 
